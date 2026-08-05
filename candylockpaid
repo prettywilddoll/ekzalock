@@ -9,6 +9,7 @@ local cam = workspace.CurrentCamera
 local locked = false
 local tgt = nil
 local savedKey = "ANGEL_UI_POS"
+local DEFAULT_TRANSPARENCY = 0.3  -- полупрозрачность кнопки
 
 local function hsv(h,s,v)
 	local i = math.floor(h*6)
@@ -120,13 +121,14 @@ local function makeUI()
 	local btn = Instance.new("TextButton",scr)
 	btn.Size = UDim2.new(0,270,0,68)
 	btn.BackgroundColor3 = Color3.fromRGB(255,255,255)
+	btn.BackgroundTransparency = DEFAULT_TRANSPARENCY  -- полупрозрачный фон
 	btn.BorderSizePixel = 3
 	btn.Font = Enum.Font.GothamBlack
 	btn.TextSize = 27
 	btn.Text = "candy lock"
 	btn.TextColor3 = Color3.new(1,1,1)
+	btn.AutoButtonColor = false
 
-	-- Скругление углов кнопки (радужная рамка сохранится)
 	local corner = Instance.new("UICorner", btn)
 	corner.CornerRadius = UDim.new(0, 12)
 
@@ -147,68 +149,82 @@ local function makeUI()
 	lbl.TextColor3 = Color3.fromRGB(200,200,200)
 	lbl.Text = "No target"
 
-	local dragging=false
-	local dragStart,posStart
-	local activeTouch=nil
+	local dragging = false
+	local dragStart, posStart
+	local activeTouch = nil
 
 	local function upd(i)
 		local d = i.Position - dragStart
-		btn.Position = UDim2.new(posStart.X.Scale,posStart.X.Offset+d.X,posStart.Y.Scale,posStart.Y.Offset+d.Y)
+		btn.Position = UDim2.new(posStart.X.Scale, posStart.X.Offset + d.X, posStart.Y.Scale, posStart.Y.Offset + d.Y)
+	end
+
+	local function setDragVisuals(isDragging)
+		if isDragging then
+			btn.BackgroundTransparency = math.min(DEFAULT_TRANSPARENCY + 0.3, 0.9)  -- увеличиваем прозрачность
+			btn.TextTransparency = 0.2
+			lbl.TextTransparency = 0.2
+		else
+			btn.BackgroundTransparency = DEFAULT_TRANSPARENCY
+			btn.TextTransparency = 0
+			lbl.TextTransparency = 0
+		end
 	end
 
 	btn.InputBegan:Connect(function(i)
-		if (i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1) and not activeTouch then
+		if (i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1) and not activeTouch then
 			activeTouch = i
-			dragging=true
-			dragStart=i.Position
-			posStart=btn.Position
+			dragging = true
+			dragStart = i.Position
+			posStart = btn.Position
+			setDragVisuals(true)
 
-			local move,stop
+			local move, stop
 			move = uis.InputChanged:Connect(function(m)
-				if dragging and (m==activeTouch) then
+				if dragging and m == activeTouch then
 					upd(m)
 				end
 			end)
 
 			stop = i.Changed:Connect(function()
-				if i.UserInputState==Enum.UserInputState.End then
-					dragging=false
-					activeTouch=nil
+				if i.UserInputState == Enum.UserInputState.End then
+					dragging = false
+					activeTouch = nil
+					setDragVisuals(false)
 					move:Disconnect()
 					stop:Disconnect()
-					if setshared then setshared(savedKey,btn.Position) end
+					if setshared then setshared(savedKey, btn.Position) end
 				end
 			end)
 		end
 	end)
 
 	btn.MouseButton1Click:Connect(function()
-		locked=not locked
+		locked = not locked
 		if locked then
-			tgt=getClosest()
+			tgt = getClosest()
 			if tgt then
-				lbl.Text="Target: "..tgt.Name
-				respawnTrack(tgt,lbl)
+				lbl.Text = "Target: " .. tgt.Name
+				respawnTrack(tgt, lbl)
 			else
-				lbl.Text="No valid target"
+				lbl.Text = "No valid target"
 			end
 		else
-			tgt=nil
-			lbl.Text="No target"
+			tgt = nil
+			lbl.Text = "No target"
 		end
 	end)
 
 	run.RenderStepped:Connect(function()
-		local h = (tick()*0.25)%1
+		local h = (tick() * 0.25) % 1
 
 		btn.TextColor3 = hsv(h, 0.5, 0.95)
 		lbl.TextColor3 = hsv(h, 0.5, 0.95)
 		btn.BorderColor3 = hsv(h, 1, 1)
 
 		if locked and tgt and alive(tgt) then
-			local prt=tgt.Character:FindFirstChild("HumanoidRootPart") or tgt.Character:FindFirstChild("Head")
+			local prt = tgt.Character:FindFirstChild("HumanoidRootPart") or tgt.Character:FindFirstChild("Head")
 			if prt then
-				cam.CFrame=CFrame.new(cam.CFrame.Position,prt.Position)
+				cam.CFrame = CFrame.new(cam.CFrame.Position, prt.Position)
 			end
 		end
 	end)
