@@ -126,6 +126,10 @@ local function makeUI()
 	btn.Text = "candy lock"
 	btn.TextColor3 = Color3.new(1,1,1)
 
+	-- Скругление углов кнопки (радужная рамка сохранится)
+	local corner = Instance.new("UICorner", btn)
+	corner.CornerRadius = UDim.new(0, 12)
+
 	local save = getshared and getshared(savedKey)
 	if save and typeof(save)=="UDim2" then
 		btn.Position = save
