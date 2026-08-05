@@ -9,7 +9,7 @@ local cam = workspace.CurrentCamera
 local locked = false
 local tgt = nil
 local savedKey = "ANGEL_UI_POS"
-local DEFAULT_TRANSPARENCY = 0.3  -- полупрозрачность кнопки
+local DEFAULT_TRANSPARENCY = 0.3
 
 local function hsv(h,s,v)
 	local i = math.floor(h*6)
@@ -121,7 +121,7 @@ local function makeUI()
 	local btn = Instance.new("TextButton",scr)
 	btn.Size = UDim2.new(0,270,0,68)
 	btn.BackgroundColor3 = Color3.fromRGB(255,255,255)
-	btn.BackgroundTransparency = DEFAULT_TRANSPARENCY  -- полупрозрачный фон
+	btn.BackgroundTransparency = DEFAULT_TRANSPARENCY
 	btn.BorderSizePixel = 3
 	btn.Font = Enum.Font.GothamBlack
 	btn.TextSize = 27
@@ -149,6 +149,24 @@ local function makeUI()
 	lbl.TextColor3 = Color3.fromRGB(200,200,200)
 	lbl.Text = "No target"
 
+	-- Общая функция переключения блокировки
+	local function toggleLock()
+		locked = not locked
+		if locked then
+			tgt = getClosest()
+			if tgt then
+				lbl.Text = "Target: " .. tgt.Name
+				respawnTrack(tgt, lbl)
+			else
+				lbl.Text = "No valid target"
+			end
+		else
+			tgt = nil
+			lbl.Text = "No target"
+		end
+	end
+
+	-- Перетаскивание
 	local dragging = false
 	local dragStart, posStart
 	local activeTouch = nil
@@ -160,7 +178,7 @@ local function makeUI()
 
 	local function setDragVisuals(isDragging)
 		if isDragging then
-			btn.BackgroundTransparency = math.min(DEFAULT_TRANSPARENCY + 0.3, 0.9)  -- увеличиваем прозрачность
+			btn.BackgroundTransparency = math.min(DEFAULT_TRANSPARENCY + 0.3, 0.9)
 			btn.TextTransparency = 0.2
 			lbl.TextTransparency = 0.2
 		else
@@ -198,22 +216,18 @@ local function makeUI()
 		end
 	end)
 
-	btn.MouseButton1Click:Connect(function()
-		locked = not locked
-		if locked then
-			tgt = getClosest()
-			if tgt then
-				lbl.Text = "Target: " .. tgt.Name
-				respawnTrack(tgt, lbl)
-			else
-				lbl.Text = "No valid target"
-			end
-		else
-			tgt = nil
-			lbl.Text = "No target"
+	-- Клик по кнопке
+	btn.MouseButton1Click:Connect(toggleLock)
+
+	-- Нажатие клавиши Q
+	uis.InputBegan:Connect(function(input, gameProcessed)
+		if gameProcessed then return end  -- игнорируем, если ввод обработан игрой (чат и т.п.)
+		if input.KeyCode == Enum.KeyCode.Q then
+			toggleLock()
 		end
 	end)
 
+	-- Слежение за целью
 	run.RenderStepped:Connect(function()
 		local h = (tick() * 0.25) % 1
 
