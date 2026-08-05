@@ -119,12 +119,12 @@ local function makeUI()
 	scr.ResetOnSpawn = false
 
 	local btn = Instance.new("TextButton",scr)
-	btn.Size = UDim2.new(0,270,0,68)          -- увеличено в 1.5 раза
-	btn.BackgroundColor3 = Color3.fromRGB(25,25,25)
+	btn.Size = UDim2.new(0,270,0,68)
+	btn.BackgroundColor3 = Color3.fromRGB(255,255,255)   -- было (25,25,25)
 	btn.BorderColor3 = Color3.fromRGB(0,120,255)
 	btn.BorderSizePixel = 3
 	btn.Font = Enum.Font.GothamBlack
-	btn.TextSize = 27                        -- увеличено в 1.5 раза
+	btn.TextSize = 27
 	btn.Text = "candy lock"
 	btn.TextColor3 = Color3.new(1,1,1)
 
